@@ -37,7 +37,7 @@ const genId = () => `photo-${++idCounter}`;
 export default function PrintLayout({ photoCanvasRef, photoSize }: PrintLayoutProps) {
   const [paperSize, setPaperSize] = useState<PaperSize>(PAPER_SIZES[0]);
   const [gapMm, setGapMm] = useState(2);
-  const [photosPerRow, setPhotosPerRow] = useState(4);
+  const [photosPerRow, setPhotosPerRow] = useState(6);
   const [photos, setPhotos] = useState<SheetPhoto[]>([]);
   const [maxCols, setMaxCols] = useState(0);
   const [totalSlots, setTotalSlots] = useState(0);

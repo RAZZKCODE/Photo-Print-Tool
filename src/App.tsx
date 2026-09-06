@@ -8,8 +8,11 @@ import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import About from '@/components/About';
 import Footer from '@/components/Footer';
+import { useState } from 'react';
 
 function App() {
+  const [isEditing, setIsEditing] = useState(false);
+
   const scrollToEditor = () => {
     document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -22,8 +25,8 @@ function App() {
     <div className="min-h-screen bg-white">
       <Header onReset={handleReset} />
       <main>
-        <Hero onStart={scrollToEditor} />
-        <PhotoEditor onReset={handleReset} />
+        {!isEditing && <Hero onStart={scrollToEditor} />}
+        <PhotoEditor onReset={handleReset} onEditingChange={setIsEditing} />
         <Features />
         <HowItWorks />
         <SizesTable />

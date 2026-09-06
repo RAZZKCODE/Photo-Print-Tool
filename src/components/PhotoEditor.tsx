@@ -39,13 +39,14 @@ const BG_COLORS: { label: string; value: [number, number, number, number] }[] = 
 
 interface PhotoEditorProps {
   onReset: () => void;
+  onEditingChange: (isEditing: boolean) => void;
 }
 
-export default function PhotoEditor({ onReset }: PhotoEditorProps) {
+export default function PhotoEditor({ onReset, onEditingChange }: PhotoEditorProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageEl, setImageEl] = useState<HTMLImageElement | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('crop');
-  const [selectedSize, setSelectedSize] = useState(PHOTO_SIZES[1]); // Indian passport default
+  const [selectedSize, setSelectedSize] = useState(PHOTO_SIZES[0]); // Standard passport default
   const [zoom, setZoom] = useState(1);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
@@ -116,6 +117,7 @@ export default function PhotoEditor({ onReset }: PhotoEditorProps) {
     setBgRemoved(false);
     setAdjustments(DEFAULT_ADJUSTMENTS);
     setActiveTab('crop');
+    onEditingChange(true);
   };
 
   const handleRemoveBg = async () => {
@@ -156,6 +158,7 @@ export default function PhotoEditor({ onReset }: PhotoEditorProps) {
     setOffsetX(0);
     setOffsetY(0);
     setAdjustments(DEFAULT_ADJUSTMENTS);
+    onEditingChange(false);
   };
 
   // ====== No image yet: show upload zone ======
