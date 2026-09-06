@@ -227,23 +227,41 @@ export function cropToAspectRatio(
 }
 
 /**
- * Generate a print layout canvas with multiple copies of the photo arranged on a paper sheet.
+ * Generate a print layout canvas with multiple photos arranged on a paper sheet.
+ * Each photo is repeated by its copy count. Photos are placed left-to-right
+ * starting from the top row, wrapping into new rows based on photosPerRow.
+ * Only the first sheet is rendered; overflow is cut off.
  */
-export function generatePrintLayout(
-  photoCanvas: HTMLCanvasElement,
+export function generatePrintLayoutMulti(
+  photoEntries: { canvas: HTMLCanvasElement; copies: number }[],
   paperWidthCm: number,
   paperHeightCm: number,
   photoWidthCm: number,
   photoHeightCm: number,
+  photosPerRow: number,
   gapMm: number = 2,
   dpi: number = 300
-): HTMLCanvasElement {
+): { canvas: HTMLCanvasElement; rows: number; cols: number; placed: number; totalSlots: number } {
   const cmToInch = 1 / 2.54;
   const paperWidthPx = Math.round(paperWidthCm * cmToInch * dpi);
   const paperHeightPx = Math.round(paperHeightCm * cmToInch * dpi);
   const photoWidthPx = Math.round(photoWidthCm * cmToInch * dpi);
   const photoHeightPx = Math.round(photoHeightCm * cmToInch * dpi);
   const gapPx = Math.round((gapMm / 10) * cmToInch * dpi);
+
+  const cols = Math.min(photosPerRow, Math.floor((paperWidthPx + gapPx) / (photoWidthPx + gapPx)));
+  const maxRows = Math.floor((paperHeightPx + gapPx) / (photoHeightPx + gapPx));
+  const totalSlots = cols * maxRows;
+
+  // Expand photos by copy count
+  const expanded: HTMLCanvasElement[] = [];
+  for (const entry of photoEntries) {
+    for (let i = 0; i < entry.copies; i++) {
+      expanded.push(entry.canvas);
+    }
+  }
+
+  const rows = Math.min(Math.ceil(expanded.length / cols), maxRows);
 
   const canvas = document.createElement('canvas');
   canvas.width = paperWidthPx;
@@ -254,22 +272,21 @@ export function generatePrintLayout(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, paperWidthPx, paperHeightPx);
 
-  // Calculate how many photos fit
-  const cols = Math.floor((paperWidthPx + gapPx) / (photoWidthPx + gapPx));
-  const rows = Math.floor((paperHeightPx + gapPx) / (photoHeightPx + gapPx));
+  // Start from top-left corner (small margin)
+  const margin = gapPx;
+  const startX = (paperWidthPx - (cols * photoWidthPx + (cols - 1) * gapPx)) / 2;
+  const startY = margin;
 
-  const totalWidth = cols * photoWidthPx + (cols - 1) * gapPx;
-  const totalHeight = rows * photoHeightPx + (rows - 1) * gapPx;
-  const startX = (paperWidthPx - totalWidth) / 2;
-  const startY = (paperHeightPx - totalHeight) / 2;
-
-  for (let row = 0; row < rows; row++) {
+  let placed = 0;
+  for (let row = 0; row < maxRows; row++) {
     for (let col = 0; col < cols; col++) {
+      if (placed >= expanded.length) break;
       const x = startX + col * (photoWidthPx + gapPx);
       const y = startY + row * (photoHeightPx + gapPx);
-      ctx.drawImage(photoCanvas, x, y, photoWidthPx, photoHeightPx);
+      ctx.drawImage(expanded[placed], x, y, photoWidthPx, photoHeightPx);
+      placed++;
     }
   }
 
-  return canvas;
+  return { canvas, rows, cols, placed, totalSlots };
 }
